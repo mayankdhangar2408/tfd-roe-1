@@ -1,0 +1,60 @@
+name: Matrix Build with Artifacts
+
+# Allow manual runs and runs on push to main (so you can trigger easily)
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    # run matrix across OS and Node versions (3+ variants)
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node-version: [14, 16, 18]
+
+    # Each matrix cell runs in parallel
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: matrix-011d5cc
+        # This step MUST include the identifier matrix-011d5cc
+        run: |
+          echo "Running matrix job on $RUNNER_OS - Node ${{ matrix.node-version }}"
+          echo "matrix.os=${{ matrix.os }}" >> build-metadata.txt
+          echo "matrix.node=${{ matrix.node-version }}" >> build-metadata.txt
+          echo "run.by=matrix-011d5cc" >> build-metadata.txt
+
+      - name: Install (no-op placeholder)
+        run: |
+          # Put build/install commands here if needed. Using placeholder to simulate build.
+          node -v
+          npm --version || true
+
+      - name: Generate build artifact (non-empty)
+        run: |
+          # Create a clearly unique artifact per matrix variant.
+          ARTIFACT_NAME="build-011d5cc-${{ matrix.os }}-v${{ matrix.node-version }}"
+          echo "Artifact for $ARTIFACT_NAME" > "${ARTIFACT_NAME}.txt"
+          echo "Generated at: $(date -u)" >> "${ARTIFACT_NAME}.txt"
+          # include build metadata
+          cat build-metadata.txt >> "${ARTIFACT_NAME}.txt"
+          # list file to show it's present
+          ls -la "${ARTIFACT_NAME}.txt"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          # Artifact name must start with the prefix requested
+          name: build-011d5cc-${{ matrix.os }}-v${{ matrix.node-version }}
+          path: build-011d5cc-${{ matrix.os }}-v${{ matrix.node-version }}.txt
