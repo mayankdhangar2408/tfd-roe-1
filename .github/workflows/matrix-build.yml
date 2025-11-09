@@ -1,60 +1,35 @@
 name: Matrix Build with Artifacts
 
-# Allow manual runs and runs on push to main (so you can trigger easily)
 on:
   push:
-    branches: [ "main", "master" ]
-  workflow_dispatch: {}
+  pull_request:
 
 jobs:
   build:
-    # run matrix across OS and Node versions (3+ variants)
     strategy:
-      fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        node-version: [14, 16, 18]
-
-    # Each matrix cell runs in parallel
-    runs-on: ${{ matrix.os }}
+        version: [14, 16, 18]  # Node.js versions
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js ${{ matrix.node-version }}
+      - name: Setup Node.js ${{ matrix.version }}
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: ${{ matrix.version }}
 
-      - name: matrix-011d5cc
-        # This step MUST include the identifier matrix-011d5cc
-        run: |
-          echo "Running matrix job on $RUNNER_OS - Node ${{ matrix.node-version }}"
-          echo "matrix.os=${{ matrix.os }}" >> build-metadata.txt
-          echo "matrix.node=${{ matrix.node-version }}" >> build-metadata.txt
-          echo "run.by=matrix-011d5cc" >> build-metadata.txt
+      - name: matrix-82240ae
+        run: echo "Building for Node.js version ${{ matrix.version }}"
 
-      - name: Install (no-op placeholder)
+      - name: Generate build artifact
         run: |
-          # Put build/install commands here if needed. Using placeholder to simulate build.
-          node -v
-          npm --version || true
-
-      - name: Generate build artifact (non-empty)
-        run: |
-          # Create a clearly unique artifact per matrix variant.
-          ARTIFACT_NAME="build-011d5cc-${{ matrix.os }}-v${{ matrix.node-version }}"
-          echo "Artifact for $ARTIFACT_NAME" > "${ARTIFACT_NAME}.txt"
-          echo "Generated at: $(date -u)" >> "${ARTIFACT_NAME}.txt"
-          # include build metadata
-          cat build-metadata.txt >> "${ARTIFACT_NAME}.txt"
-          # list file to show it's present
-          ls -la "${ARTIFACT_NAME}.txt"
+          echo "Build output for Node.js version ${{ matrix.version }}" > build-output-${{ matrix.version }}.txt
+          echo "Generated on $(date)" >> build-output-${{ matrix.version }}.txt
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          # Artifact name must start with the prefix requested
-          name: build-011d5cc-${{ matrix.os }}-v${{ matrix.node-version }}
-          path: build-011d5cc-${{ matrix.os }}-v${{ matrix.node-version }}.txt
+          name: build-82240ae-v${{ matrix.version }}
+          path: build-output-${{ matrix.version }}.txt
